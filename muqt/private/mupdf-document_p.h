@@ -24,11 +24,11 @@ public:
     void deleteData()
     {
         if (document) {
-            fz_close_document(document);
+            fz_drop_document(context,document);
             document = NULL;
         }
         if (context) {
-            fz_free_context(context);
+            fz_drop_context(context);
             context = NULL;
         }
     }
@@ -41,13 +41,15 @@ public:
     QString info(const char *key)
     {
         pdf_document *xref = (pdf_document *)document;
-        pdf_obj *info = pdf_dict_gets(pdf_trailer(xref), (char *)"Info");
+        pdf_obj *info = pdf_dict_gets((fz_context*) context,
+                                        pdf_trailer(context,xref), 
+                                        (char *)"Info");
         if (!info)
             return QString();
-        pdf_obj *obj = pdf_dict_gets(info, (char *)key);
+        pdf_obj *obj = pdf_dict_gets(context, info, (char *)key);
         if (!obj)
             return QString();
-        char *str = pdf_to_utf8((pdf_document *)document, obj);
+        char *str = pdf_to_utf8(context, xref, obj);
         QString ret = QString::fromUtf8(str);
         free(str);
         return ret;

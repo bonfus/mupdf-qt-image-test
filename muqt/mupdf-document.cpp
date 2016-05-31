@@ -130,7 +130,7 @@ Document::~Document()
  */
 bool Document::needsPassword() const
 {
-    return fz_needs_password(d->document);
+    return fz_needs_password(d->context, d->document);
 }
 
 /**
@@ -144,7 +144,7 @@ bool Document::needsPassword() const
  */
 bool Document::authPassword(const QString &password)
 {
-    return fz_authenticate_password(d->document,
+    return fz_authenticate_password(d->context,d->document,
             password.toLocal8Bit().data());
 }
 
@@ -156,7 +156,7 @@ int Document::numPages() const
     int ret;
     fz_try(d->context)
     {
-        ret = fz_count_pages(d->document);
+        ret = fz_count_pages(d->context, d->document);
     }
     fz_catch(d->context)
     {
@@ -205,7 +205,7 @@ Outline * Document::outline() const
     fz_outline *o;
     OutlinePrivate *outlinep;
     
-    o = fz_load_outline(d->document);
+    o = fz_load_outline(d->context,d->document);
     if (o) {
         outlinep = new OutlinePrivate(d, o);
         d->outlines << outlinep;

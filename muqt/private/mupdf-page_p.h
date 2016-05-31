@@ -23,15 +23,15 @@ public:
             display_list = NULL;
         }
         if (text_sheet) {
-            fz_free_text_sheet(context, text_sheet);
+            fz_drop_stext_sheet(context, text_sheet);
             text_sheet = NULL;
         }
         if (text_page) {
-            fz_free_text_page(context, text_page);
+            fz_drop_stext_page(context, text_page);
             text_page = NULL;
         }
         if (page) {
-            fz_free_page(document, page);
+            fz_drop_page(context, page);
             page = NULL;
         }
     }
@@ -41,8 +41,8 @@ public:
     fz_document *document;
     fz_page *page;
     fz_display_list *display_list;
-    fz_text_sheet *text_sheet;
-    fz_text_page *text_page;
+    fz_stext_sheet *text_sheet;
+    fz_stext_page *text_page;
     bool transparent;
     int b, g, r, a; // background color
 };

@@ -195,21 +195,21 @@ PagePrivate::PagePrivate(DocumentPrivate *dp, int index)
         fz_device *text_device;
 
         // load page
-        page = fz_load_page(document, index);
+        page = fz_load_page(context, document, index);
         
         // display list
         display_list = fz_new_display_list(context);
         list_device = fz_new_list_device(context, display_list);
-        fz_run_page(document, page, list_device, &fz_identity, NULL);
-        fz_free_device(list_device);
+        fz_run_page(context, page, list_device, &fz_identity, NULL);
+        fz_drop_device(context, list_device);
 
         // create text sheet and text page
-        text_sheet = fz_new_text_sheet(context);
-        text_page = fz_new_text_page(context);
-        text_device = fz_new_text_device(context, text_sheet, text_page);
-        fz_bound_page(document, page, &bounds);
-        fz_run_display_list(display_list, text_device, &fz_identity, &bounds, NULL);
-        fz_free_device(text_device);
+        text_sheet = fz_new_stext_sheet(context);
+        text_page = fz_new_stext_page(context);
+        text_device = fz_new_stext_device(context, text_sheet, text_page);
+        fz_bound_page(context, page, &bounds);
+        fz_run_display_list(context,display_list, text_device, &fz_identity, &bounds, NULL);
+        fz_drop_device(context,text_device);
     }
     fz_catch(context)
     {
@@ -253,7 +253,7 @@ QImage Page::renderImage(float scaleX, float scaleY, float rotation) const
     // get transformed page size
     fz_rect bounds;
     fz_irect bbox;
-    fz_bound_page(d->document, d->page, &bounds);
+    fz_bound_page(d->context, d->page, &bounds);
     fz_transform_rect(&bounds, &transform);
     fz_round_rect(&bbox, &bounds);
 
@@ -263,10 +263,10 @@ QImage Page::renderImage(float scaleX, float scaleY, float rotation) const
     {
         // fz_pixmap will always include a separate alpha channel
 #if QT_VERSION < 0x050200
-        pixmap = fz_new_pixmap_with_bbox(d->context, fz_device_bgr(d->context), &bbox);
+        pixmap = fz_new_pixmap_with_bbox(d->context, fz_device_bgr(d->context), &bbox,1);
 #else
         // use rgba for Qt5.2
-        pixmap = fz_new_pixmap_with_bbox(d->context, fz_device_rgb(d->context), &bbox);
+        pixmap = fz_new_pixmap_with_bbox(d->context, fz_device_rgb(d->context), &bbox,1);
 #endif
         samples = fz_pixmap_samples(d->context, pixmap);
         width = fz_pixmap_width(d->context, pixmap);
@@ -287,12 +287,12 @@ QImage Page::renderImage(float scaleX, float scaleY, float rotation) const
             }
         }
         dev = fz_new_draw_device(d->context, pixmap);
-        fz_run_display_list(d->display_list, dev, &transform, &bounds, NULL);
+        fz_run_display_list(d->context,d->display_list, dev, &transform, &bounds, NULL);
     }
     fz_always(d->context)
     {
         if (dev) {
-            fz_free_device(dev);
+            fz_drop_device(d->context,dev);
         }
         dev = NULL;
     }
@@ -331,7 +331,7 @@ QSizeF Page::size() const
 {
     fz_rect rect;
 
-    fz_bound_page(d->document, d->page, &rect);
+    fz_bound_page(d->context, d->page, &rect);
     return QSizeF(rect.x1 - rect.x0, rect.y1 - rect.y0);
 }
 
@@ -407,9 +407,9 @@ QList<TextBox *> Page::textList() const
     QList<TextBox *> ret;
     TextBox *box;
     TextBoxPrivate *boxp;
-    fz_text_block *block;
-    fz_text_line *line;
-    fz_text_span *span;
+    fz_stext_block *block;
+    fz_stext_line *line;
+    fz_stext_span *span;
 
     for (int block_num = 0; block_num < d->text_page->len; ++block_num) {
         // get block
@@ -420,7 +420,7 @@ QList<TextBox *> Page::textList() const
 
         for (line = block->lines; line < block->lines + block->len; ++line) { // lines
             for (span = line->first_span; span; span = span->next) { // spans
-                boxp = new TextBoxPrivate(span);
+                boxp = new TextBoxPrivate(d->context, span);
                 box = new TextBox(boxp);
                 ret << box;
             }

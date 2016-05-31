@@ -1,2 +1,5 @@
 *.pro.user
-
+*.o
+*.a
+Makefile
+MuQtTestImage/MuQtTestImage

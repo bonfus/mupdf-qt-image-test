@@ -45,7 +45,7 @@ QRectF TextBox::charBoundingBox(int index) const
 {
 	fz_rect rect;
 
-	fz_text_char_bbox(&rect, d->text_span, index);
+	fz_stext_char_bbox(d->ctx, &rect, d->text_span, index);
 
 	return QRectF(QPointF(rect.x0, rect.y0), QPointF(rect.x1, rect.y1));
 }
@@ -56,8 +56,8 @@ QRectF TextBox::charBoundingBox(int index) const
 QString TextBox::text() const
 {
     QString ret;
-    fz_text_char *ch;
-    fz_text_char *end = d->text_span->text + d->text_span->len;
+    fz_stext_char *ch;
+    fz_stext_char *end = d->text_span->text + d->text_span->len;
 
     for (ch = d->text_span->text; ch < end; ++ch) {
         ret.append(QChar(ch->c));

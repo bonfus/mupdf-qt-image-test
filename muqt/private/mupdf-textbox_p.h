@@ -11,13 +11,14 @@ namespace MuPDF
 class TextBoxPrivate
 {
 public:
-    TextBoxPrivate(fz_text_span *ts)
-        : text_span(ts)
+    TextBoxPrivate(fz_context * context, fz_stext_span *ts)
+        : ctx(context), text_span(ts)
     {
 
     }
 
-    fz_text_span *text_span;
+    fz_stext_span *text_span;
+    fz_context * ctx;
 };
 
 } // end namespace MuPDF

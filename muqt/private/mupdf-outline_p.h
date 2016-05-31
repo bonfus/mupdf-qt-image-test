@@ -20,7 +20,7 @@ public:
     void deleteData()
     {
         if (outline) {
-            fz_free_outline(context, outline);
+            fz_drop_outline(context, outline);
             outline = NULL;
         }
     }
